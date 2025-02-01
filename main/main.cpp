@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <esp_log.h>
 
 #include "tensorflow/lite/micro/micro_mutable_op_resolver.h"
 #include "tensorflow/lite/micro/micro_interpreter.h"
@@ -6,7 +7,7 @@
 #include "tensorflow/lite/schema/schema_generated.h"
 
 #include "palm_detection_model.h"
-#include "hand_landmark_model.h"
+// #include "hand_landmark_model.h"
 
 typedef struct
 {
@@ -17,6 +18,8 @@ typedef struct
 } model_info;
 
 model_info get_model(const unsigned char* model_buf){
+    ESP_LOGI("get_model", "Started @ get_model");
+    printf("Started @ get_model\n");
     const int kTensorArenaSize =  3500000;
     uint8_t tensor_arena[kTensorArenaSize];
 
@@ -28,6 +31,8 @@ model_info get_model(const unsigned char* model_buf){
                (int) model->version(), TFLITE_SCHEMA_VERSION);
         return {nullptr, nullptr, nullptr, nullptr};
     }
+    printf("Loaded model\n");
+    ESP_LOGI("get_model", "Loaded model");
     // --------------- PALM DETECTION MODEL ------------------
     // Input: tensor: float32[1,192,192,3]
     // Ouputs:
@@ -70,13 +75,16 @@ model_info get_model(const unsigned char* model_buf){
     // Build an interpreter to run the model with. We need to log the arena size to better allocate it in the future
     tflite::MicroInterpreter* interpreter = new tflite::MicroInterpreter(
         model, resolver, tensor_arena, kTensorArenaSize);
-    
+    printf("Created Interpreter\n");
+    ESP_LOGI("get_model", "Created Interpreter");
     // Allocate memory from the tensor_arena for the model's tensors.
     TfLiteStatus allocate_status = interpreter->AllocateTensors();
     if (allocate_status != kTfLiteOk) {
         MicroPrintf("AllocateTensors() failed");
         return {nullptr, nullptr, nullptr, nullptr};
     }
+    printf("Allocated tensors\n");
+    ESP_LOGI("get_model", "Allocated tensors");
 
     int arena_used_bytes = interpreter->arena_used_bytes();
 
@@ -90,21 +98,23 @@ model_info get_model(const unsigned char* model_buf){
 
 extern "C" void app_main(void)
 {
+    printf("Started @ app_main\n");
+    ESP_LOGI("app_main", "Started @ app_main");
 
     // initialize variables
-    const tflite::Model* palm_detection_model = nullptr;
-    tflite::MicroInterpreter* palm_detection_interpreter = nullptr;
-    TfLiteTensor* palm_detection_input = nullptr;
-    TfLiteTensor* palm_detection_output = nullptr;
+    // const tflite::Model* palm_detection_model = nullptr;
+    // tflite::MicroInterpreter* palm_detection_interpreter = nullptr;
+    // TfLiteTensor* palm_detection_input = nullptr;
+    // TfLiteTensor* palm_detection_output = nullptr;
 
-    const tflite::Model* hand_landmark_model = nullptr;
-    tflite::MicroInterpreter* hand_landmark_interpreter = nullptr;
-    TfLiteTensor* hand_landmark_input = nullptr;
-    TfLiteTensor* hand_landmark_output = nullptr;
+    // const tflite::Model* hand_landmark_model = nullptr;
+    // tflite::MicroInterpreter* hand_landmark_interpreter = nullptr;
+    // TfLiteTensor* hand_landmark_input = nullptr;
+    // TfLiteTensor* hand_landmark_output = nullptr;
 
 
     model_info palm_detection_model_info = get_model(palm_detection_full_tflite);
-    model_info hand_landmark_model_info = get_model(hand_landmark_lite_tflite);
+    // model_info hand_landmark_model_info = get_model(hand_landmark_lite_tflite);
 
     // [ palm_tracking_model, palm_detection_interpreter, palm_detection_input, palm_detection_output ] = palm_detection_model_info;
     // [ hand_landmark_model, hand_landmark_interpreter, hand_landmark_input, hand_landmark_output ] = hand_landmark_model_info;
